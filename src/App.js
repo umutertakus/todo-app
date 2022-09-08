@@ -1,20 +1,16 @@
-import styled from "@emotion/styled";
-import { Box } from "@mui/system";
+import { ThemeProvider } from "@emotion/react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import Login from "./pages/Login";
+import theme from "./theme";
 
 function App() {
   return (
-    <Wrapper>
-      Todo App
-    </Wrapper>
+    <ThemeProvider theme={theme}>
+      <Routes>
+        <Route path="/" element={<Login />} />
+      </Routes>
+    </ThemeProvider>
   );
 }
 
 export default App;
-
-const Wrapper = styled(Box)(() => ({
-  padding: 0,
-  margin: 0,
-  height: "100vh",
-  width: "100vw",
-  display: "flex",
-}));

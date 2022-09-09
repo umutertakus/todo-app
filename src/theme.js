@@ -1,4 +1,5 @@
 import { createTheme } from "@mui/material";
+import { blue } from "@mui/material/colors";
 
 const theme = createTheme({
   typography: {
@@ -7,7 +8,9 @@ const theme = createTheme({
       fontSize: "16px",
     },
   },
-  palette: {},
+  palette: {
+    secondary: blue,
+  },
   components: {
     MuiButton: {
       styleOverrides: {

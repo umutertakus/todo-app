@@ -1,5 +1,5 @@
 import { ThemeProvider } from "@emotion/react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import TodoList from "./pages/TodoList";
 import theme from "./theme";

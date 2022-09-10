@@ -1,12 +1,5 @@
 import styled from "@emotion/styled";
-import {
-  Box,
-  Button,
-  IconButton,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { Box, IconButton, Stack, TextField, Typography } from "@mui/material";
 import LoadingButton from "@mui/lab/LoadingButton";
 import axios from "axios";
 import { useEffect, useState } from "react";
@@ -44,6 +37,16 @@ const TodoList = () => {
     return isShowErrorMessage && "Todo content must be at least 3 characters";
   };
 
+  const showNoTodoMessage = () => {
+    return (
+      todoList.length === 0 && (
+        <Typography variant="h6" pt={1}>
+          There are no todos to show. You can add something new!
+        </Typography>
+      )
+    );
+  };
+
   const addTodo = async () => {
     if (todo.content.length < 3) {
       setIsShowErrorMessage(true);
@@ -73,7 +76,10 @@ const TodoList = () => {
 
   return (
     <Wrapper>
-      <Stack direction="row" spacing={1} width="500px" pb={1} sx={{ position: "sticky" }}>
+      <Typography variant="h4" pt={2}>
+        Hi {localStorage.getItem("username")}!
+      </Typography>
+      <Stack direction="row" spacing={1} width="500px" pb={1} pt={3}>
         <TodoTextField
           value={todo.content}
           onChange={handleTodoChange}
@@ -95,6 +101,7 @@ const TodoList = () => {
         </AddTodoButton>
       </Stack>
       <TodoListBox ref={animationParent}>
+        {showNoTodoMessage()}
         {todoList.map((todo) => (
           <Todo key={todo.id}>
             <Typography pl={1}>{todo.content}</Typography>
@@ -116,7 +123,6 @@ const Wrapper = styled(Box)(() => ({
   height: "100vh",
   width: "100vw",
   display: "flex",
-  justifyContent: "center",
   alignItems: "center",
   flexDirection: "column",
   backgroundColor: "#ebf5f3",

@@ -33,6 +33,7 @@ const Login = () => {
       });
     } else {
       navigate("/dashboard");
+      localStorage.setItem("username", loginInfo.username)
     }
   };
 

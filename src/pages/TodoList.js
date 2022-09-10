@@ -7,6 +7,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import LoadingButton from "@mui/lab/LoadingButton";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
@@ -22,6 +23,7 @@ const TodoList = () => {
     isComplete: false,
   });
   const [isShowErrorMessage, setIsShowErrorMessage] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const getTodos = () => {
     axios.get(BASE_URL).then((response) => setTodoList(response.data));
@@ -46,13 +48,21 @@ const TodoList = () => {
     if (todo.content.length < 3) {
       setIsShowErrorMessage(true);
     } else {
+      setIsLoading(true);
       await axios.post(BASE_URL, todo);
       setIsShowErrorMessage(false);
       setTodo({
         ...todo,
         content: "",
       });
+      setIsLoading(false);
       getTodos();
+    }
+  };
+
+  const handleKeyDownTodo = (event) => {
+    if (event.key === "Enter") {
+      addTodo();
     }
   };
 
@@ -63,15 +73,24 @@ const TodoList = () => {
 
   return (
     <Wrapper>
-      <Stack direction="row" spacing={1} width="500px" pb={1}>
+      <Stack direction="row" spacing={1} width="500px" pb={1} sx={{ position: "sticky" }}>
         <TodoTextField
           value={todo.content}
           onChange={handleTodoChange}
+          onKeyDown={handleKeyDownTodo}
+          label="Enter todo"
+          placeholder="What's on your mind?"
           variant="outlined"
           size="small"
           helperText={showErrorMessage()}
         />
-        <AddTodoButton variant="contained" color="secondary" onClick={addTodo}>
+        <AddTodoButton
+          variant="contained"
+          color="secondary"
+          onClick={addTodo}
+          loading={isLoading}
+          disabled={isLoading}
+        >
           Add Todo
         </AddTodoButton>
       </Stack>
@@ -122,10 +141,10 @@ const Todo = styled(Box)(() => ({
 }));
 
 const TodoTextField = styled(TextField)(() => ({
-  width: "70%",
+  width: "75%",
 }));
 
-const AddTodoButton = styled(Button)(() => ({
-  width: "30%",
+const AddTodoButton = styled(LoadingButton)(() => ({
+  width: "25%",
   maxHeight: "40px",
 }));

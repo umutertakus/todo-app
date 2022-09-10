@@ -26,6 +26,13 @@ const theme = createTheme({
         },
       },
     },
+    MuiFormHelperText: {
+      styleOverrides: {
+        root: {
+          color: "red"
+        }
+      }
+    }
   },
 });
 

@@ -89,9 +89,6 @@ const Wrapper = styled(Box)(() => ({
   justifyContent: "center",
   alignItems: "center",
   backgroundColor: "#ebf5f3",
-  "& .MuiFormHelperText-root": {
-    color: "red",
-  },
 }));
 
 const LoginCard = styled(Box)(() => ({

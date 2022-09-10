@@ -1,8 +1,16 @@
 import styled from "@emotion/styled";
-import { Box, Button, Stack, TextField, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  IconButton,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 const TodoList = () => {
   const BASE_URL = "https://631b2f2ffae3df4dcff73e53.mockapi.io/todos";
@@ -13,6 +21,7 @@ const TodoList = () => {
     content: "",
     isComplete: false,
   });
+  const [isShowErrorMessage, setIsShowErrorMessage] = useState(false);
 
   const getTodos = () => {
     axios.get(BASE_URL).then((response) => setTodoList(response.data));
@@ -29,8 +38,26 @@ const TodoList = () => {
     });
   };
 
+  const showErrorMessage = () => {
+    return isShowErrorMessage && "Todo content must be at least 3 characters";
+  };
+
   const addTodo = async () => {
-    await axios.post(BASE_URL, todo);
+    if (todo.content.length < 3) {
+      setIsShowErrorMessage(true);
+    } else {
+      await axios.post(BASE_URL, todo);
+      setIsShowErrorMessage(false);
+      setTodo({
+        ...todo,
+        content: "",
+      });
+      getTodos();
+    }
+  };
+
+  const deleteTodo = async (todoId) => {
+    await axios.delete(`${BASE_URL}/${todoId}`);
     getTodos();
   };
 
@@ -38,9 +65,11 @@ const TodoList = () => {
     <Wrapper>
       <Stack direction="row" spacing={1} width="500px" pb={1}>
         <TodoTextField
+          value={todo.content}
           onChange={handleTodoChange}
           variant="outlined"
           size="small"
+          helperText={showErrorMessage()}
         />
         <AddTodoButton variant="contained" color="secondary" onClick={addTodo}>
           Add Todo
@@ -48,8 +77,13 @@ const TodoList = () => {
       </Stack>
       <TodoListBox ref={animationParent}>
         {todoList.map((todo) => (
-          <Todo>
+          <Todo key={todo.id}>
             <Typography pl={1}>{todo.content}</Typography>
+            <Stack direction="row">
+              <IconButton onClick={() => deleteTodo(todo.id)}>
+                <DeleteIcon color="error" />
+              </IconButton>
+            </Stack>
           </Todo>
         ))}
       </TodoListBox>
@@ -79,9 +113,9 @@ const TodoListBox = styled(Box)(() => ({
 const Todo = styled(Box)(() => ({
   margin: "8px",
   borderRadius: "8px",
-  backgroundColor: "red",
+  backgroundColor: "#ccb2d1",
   display: "flex",
-  justifyContent: "flex-start",
+  justifyContent: "space-between",
   alignItems: "center",
   width: "500px",
   height: "40px",
@@ -93,4 +127,5 @@ const TodoTextField = styled(TextField)(() => ({
 
 const AddTodoButton = styled(Button)(() => ({
   width: "30%",
+  maxHeight: "40px",
 }));

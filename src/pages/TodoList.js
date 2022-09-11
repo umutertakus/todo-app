@@ -1,10 +1,19 @@
 import styled from "@emotion/styled";
-import { Box, IconButton, Stack, TextField, Typography } from "@mui/material";
+import {
+  Box,
+  Checkbox,
+  IconButton,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
 import LoadingButton from "@mui/lab/LoadingButton";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import DeleteIcon from "@mui/icons-material/Delete";
+import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
+import TaskAltIcon from "@mui/icons-material/TaskAlt";
 
 const TodoList = () => {
   const BASE_URL = "https://631b2f2ffae3df4dcff73e53.mockapi.io/todos";
@@ -13,13 +22,17 @@ const TodoList = () => {
   const [todoList, setTodoList] = useState([]);
   const [todo, setTodo] = useState({
     content: "",
-    isComplete: false,
+    isCompleted: false,
   });
   const [isShowErrorMessage, setIsShowErrorMessage] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isTodoListLoading, setIsTodoListLoading] = useState(false);
 
-  const getTodos = () => {
-    axios.get(BASE_URL).then((response) => setTodoList(response.data));
+  const getTodos = async () => {
+    setIsTodoListLoading(true);
+    const response = await axios.get(BASE_URL);
+    setTodoList(response.data);
+    setIsTodoListLoading(false);
   };
 
   useEffect(() => {
@@ -38,10 +51,20 @@ const TodoList = () => {
   };
 
   const showNoTodoMessage = () => {
+    return todoList.length === 0 && !setIsTodoListLoading ? (
+      <Typography variant="h6" pt={1}>
+        There are no todos to show. You can add something new!
+      </Typography>
+    ) : (
+      ""
+    );
+  };
+
+  const showLoadingMessage = () => {
     return (
-      todoList.length === 0 && (
+      isTodoListLoading && (
         <Typography variant="h6" pt={1}>
-          There are no todos to show. You can add something new!
+          Loading...
         </Typography>
       )
     );
@@ -74,6 +97,15 @@ const TodoList = () => {
     getTodos();
   };
 
+  const handleTodoComplete = async (event, content, todoId) => {
+    const request = {
+      content,
+      isCompleted: event.target.checked
+    }
+    await axios.put(`${BASE_URL}/${todoId}`, request);
+    getTodos();
+  }
+
   return (
     <Wrapper>
       <Typography variant="h4" pt={2}>
@@ -101,17 +133,25 @@ const TodoList = () => {
         </AddTodoButton>
       </Stack>
       <TodoListBox ref={animationParent}>
+        {showLoadingMessage()}
         {showNoTodoMessage()}
-        {todoList.map((todo) => (
-          <Todo key={todo.id}>
-            <Typography pl={1}>{todo.content}</Typography>
-            <Stack direction="row">
-              <IconButton onClick={() => deleteTodo(todo.id)}>
-                <DeleteIcon color="error" />
-              </IconButton>
-            </Stack>
-          </Todo>
-        ))}
+        {!isTodoListLoading &&
+          todoList.map((todo) => (
+            <Todo key={todo.id}>
+              <Typography pl={1}>{todo.content}</Typography>
+              <Stack direction="row">
+                <Checkbox
+                  checked={todo.isCompleted}
+                  icon={<RadioButtonUncheckedIcon />}
+                  checkedIcon={<TaskAltIcon />}
+                  onChange={(event) => handleTodoComplete(event, todo.content, todo.id)}
+                />
+                <IconButton onClick={() => deleteTodo(todo.id)}>
+                  <DeleteIcon color="error" />
+                </IconButton>
+              </Stack>
+            </Todo>
+          ))}
       </TodoListBox>
     </Wrapper>
   );
@@ -143,7 +183,7 @@ const Todo = styled(Box)(() => ({
   justifyContent: "space-between",
   alignItems: "center",
   width: "500px",
-  height: "40px",
+  height: "60px",
 }));
 
 const TodoTextField = styled(TextField)(() => ({

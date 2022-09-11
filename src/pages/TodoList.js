@@ -14,6 +14,7 @@ import { useAutoAnimate } from "@formkit/auto-animate/react";
 import DeleteIcon from "@mui/icons-material/Delete";
 import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
+import EditIcon from "@mui/icons-material/Edit";
 
 const TodoList = () => {
   const BASE_URL = "https://631b2f2ffae3df4dcff73e53.mockapi.io/todos";
@@ -26,7 +27,14 @@ const TodoList = () => {
   });
   const [isShowErrorMessage, setIsShowErrorMessage] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPending, setIsPending] = useState(false);
   const [isTodoListLoading, setIsTodoListLoading] = useState(false);
+  const [updateValues, setUpdateValues] = useState({
+    content: "",
+    isCompleted: false,
+    id: "",
+  });
+  const [isUpdate, setIsUpdate] = useState(false);
 
   const getTodos = async () => {
     setIsTodoListLoading(true);
@@ -70,6 +78,49 @@ const TodoList = () => {
     );
   };
 
+  const showUpdateForm = () => {
+    return (
+      isUpdate && (
+        <Stack direction="row" spacing={1} width="500px" pb={1} pt={3}>
+          <TodoTextField
+            size="small"
+            value={updateValues.content}
+            onChange={handleUpdateTodoContent}
+            onKeyDown={handleKeyDownUpdateTodo}
+            helperText={showErrorMessage()}
+            isUpdate={isUpdate}
+          />
+          <TodoButton
+            variant="contained"
+            color="success"
+            onClick={updateTodo}
+            loading={isLoading}
+            disabled={isLoading}
+            isUpdate={isUpdate}
+          >
+            Update Todo
+          </TodoButton>
+        </Stack>
+      )
+    );
+  };
+
+  const handleUpdateForm = (content, id, isCompleted) => {
+    setIsUpdate(!isUpdate);
+    setUpdateValues({
+      content,
+      id,
+      isCompleted,
+    });
+  };
+
+  const handleUpdateTodoContent = (event) => {
+    setUpdateValues({
+      ...updateValues,
+      content: event.target.value,
+    });
+  };
+
   const addTodo = async () => {
     if (todo.content.length < 3) {
       setIsShowErrorMessage(true);
@@ -81,8 +132,8 @@ const TodoList = () => {
         ...todo,
         content: "",
       });
-      setIsLoading(false);
       getTodos();
+      setIsLoading(false);
     }
   };
 
@@ -92,47 +143,77 @@ const TodoList = () => {
     }
   };
 
+  const handleKeyDownUpdateTodo = (event) => {
+    if (event.key === "Enter") {
+      updateTodo();
+    }
+  };
+
   const deleteTodo = async (todoId) => {
+    setIsPending(true);
     await axios.delete(`${BASE_URL}/${todoId}`);
     getTodos();
+    setIsPending(false);
   };
 
   const handleTodoComplete = async (event, content, todoId) => {
+    setIsPending(true);
     const request = {
       content,
-      isCompleted: event.target.checked
-    }
+      isCompleted: event.target.checked,
+    };
     await axios.put(`${BASE_URL}/${todoId}`, request);
     getTodos();
-  }
+    setIsPending(false);
+  };
+
+  const updateTodo = async () => {
+    if (updateValues.content.length < 3) {
+      setIsShowErrorMessage(true);
+    } else {
+      setIsLoading(true);
+      setIsPending(true);
+      setIsShowErrorMessage(false);
+      setIsUpdate(false);
+      const { id, ...values } = updateValues;
+      const request = values;
+      await axios.put(`${BASE_URL}/${id}`, request);
+      getTodos();
+      setIsLoading(false);
+      setIsPending(false);
+    }
+  };
 
   return (
-    <Wrapper>
+    <Wrapper ref={animationParent}>
       <Typography variant="h4" pt={2}>
         Hi {localStorage.getItem("username")}!
       </Typography>
-      <Stack direction="row" spacing={1} width="500px" pb={1} pt={3}>
-        <TodoTextField
-          value={todo.content}
-          onChange={handleTodoChange}
-          onKeyDown={handleKeyDownTodo}
-          label="Enter todo"
-          placeholder="What's on your mind?"
-          variant="outlined"
-          size="small"
-          helperText={showErrorMessage()}
-        />
-        <AddTodoButton
-          variant="contained"
-          color="secondary"
-          onClick={addTodo}
-          loading={isLoading}
-          disabled={isLoading}
-        >
-          Add Todo
-        </AddTodoButton>
-      </Stack>
-      <TodoListBox ref={animationParent}>
+      {!isUpdate && (
+        <Stack direction="row" spacing={1} width="500px" pb={1} pt={3}>
+          <TodoTextField
+            value={todo.content}
+            onChange={handleTodoChange}
+            onKeyDown={handleKeyDownTodo}
+            label="Enter todo"
+            placeholder="What's on your mind?"
+            variant="outlined"
+            size="small"
+            helperText={showErrorMessage()}
+          />
+          <TodoButton
+            variant="contained"
+            color="secondary"
+            onClick={addTodo}
+            loading={isLoading}
+            disabled={isLoading}
+          >
+            Add Todo
+          </TodoButton>
+        </Stack>
+      )}
+      {showUpdateForm()}
+      <TodoListBox>
         {showLoadingMessage()}
         {showNoTodoMessage()}
         {!isTodoListLoading &&
@@ -140,13 +221,27 @@ const TodoList = () => {
             <Todo key={todo.id}>
               <Typography pl={1}>{todo.content}</Typography>
               <Stack direction="row">
+                <IconButton
+                  disabled={isPending}
+                  onClick={() =>
+                    handleUpdateForm(todo.content, todo.id, todo.isCompleted)
+                  }
+                >
+                  <EditIcon />
+                </IconButton>
                 <Checkbox
                   checked={todo.isCompleted}
                   icon={<RadioButtonUncheckedIcon />}
                   checkedIcon={<TaskAltIcon />}
-                  onChange={(event) => handleTodoComplete(event, todo.content, todo.id)}
+                  disabled={isPending}
+                  onChange={(event) =>
+                    handleTodoComplete(event, todo.content, todo.id)
+                  }
                 />
-                <IconButton onClick={() => deleteTodo(todo.id)}>
+                <IconButton
+                  disabled={isPending}
+                  onClick={() => deleteTodo(todo.id)}
+                >
                   <DeleteIcon color="error" />
                 </IconButton>
               </Stack>
@@ -186,11 +281,11 @@ const Todo = styled(Box)(() => ({
   height: "60px",
 }));
 
-const TodoTextField = styled(TextField)(() => ({
-  width: "75%",
+const TodoTextField = styled(TextField)(({ isUpdate }) => ({
+  width: !isUpdate ? "75%" : "70%",
 }));
 
-const AddTodoButton = styled(LoadingButton)(() => ({
-  width: "25%",
+const TodoButton = styled(LoadingButton)(({ isUpdate }) => ({
+  width: !isUpdate ? "25%" : "30%",
   maxHeight: "40px",
 }));

@@ -43,7 +43,6 @@ const Login = () => {
     }
   };
 
-  console.log(loginInfo);
   return (
     <Wrapper>
       <LoginCard>

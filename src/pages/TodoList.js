@@ -3,6 +3,7 @@ import {
   Box,
   Checkbox,
   IconButton,
+  Skeleton,
   Stack,
   TextField,
   Typography,
@@ -71,9 +72,7 @@ const TodoList = () => {
   const showLoadingMessage = () => {
     return (
       isTodoListLoading && (
-        <Typography variant="h6" pt={1}>
-          Loading...
-        </Typography>
+        <Skeleton variant="rounded" width={500} height={60} />
       )
     );
   };
@@ -126,6 +125,7 @@ const TodoList = () => {
       setIsShowErrorMessage(true);
     } else {
       setIsLoading(true);
+      setIsTodoListLoading(true)
       await axios.post(BASE_URL, todo);
       setIsShowErrorMessage(false);
       setTodo({
@@ -134,6 +134,7 @@ const TodoList = () => {
       });
       getTodos();
       setIsLoading(false);
+      setIsTodoListLoading(false)
     }
   };
 
@@ -214,39 +215,38 @@ const TodoList = () => {
       )}
       {showUpdateForm()}
       <TodoListBox>
-        {showLoadingMessage()}
         {showNoTodoMessage()}
-        {!isTodoListLoading &&
-          todoList.map((todo) => (
-            <Todo key={todo.id}>
-              <Typography pl={1}>{todo.content}</Typography>
-              <Stack direction="row">
-                <IconButton
-                  disabled={isPending}
-                  onClick={() =>
-                    handleUpdateForm(todo.content, todo.id, todo.isCompleted)
-                  }
-                >
-                  <EditIcon />
-                </IconButton>
-                <Checkbox
-                  checked={todo.isCompleted}
-                  icon={<RadioButtonUncheckedIcon />}
-                  checkedIcon={<TaskAltIcon />}
-                  disabled={isPending}
-                  onChange={(event) =>
-                    handleTodoComplete(event, todo.content, todo.id)
-                  }
-                />
-                <IconButton
-                  disabled={isPending}
-                  onClick={() => deleteTodo(todo.id)}
-                >
-                  <DeleteIcon color="error" />
-                </IconButton>
-              </Stack>
-            </Todo>
-          ))}
+        {todoList.map((todo) => (
+          <Todo key={todo.id}>
+            <Typography pl={1}>{todo.content}</Typography>
+            <Stack direction="row">
+              <IconButton
+                disabled={isPending}
+                onClick={() =>
+                  handleUpdateForm(todo.content, todo.id, todo.isCompleted)
+                }
+              >
+                <EditIcon />
+              </IconButton>
+              <Checkbox
+                checked={todo.isCompleted}
+                icon={<RadioButtonUncheckedIcon />}
+                checkedIcon={<TaskAltIcon />}
+                disabled={isPending}
+                onChange={(event) =>
+                  handleTodoComplete(event, todo.content, todo.id)
+                }
+              />
+              <IconButton
+                disabled={isPending}
+                onClick={() => deleteTodo(todo.id)}
+              >
+                <DeleteIcon color="error" />
+              </IconButton>
+            </Stack>
+          </Todo>
+        ))}
+        {showLoadingMessage()}
       </TodoListBox>
     </Wrapper>
   );
